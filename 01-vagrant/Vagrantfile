@@ -1,0 +1,40 @@
+Vagrant.configure("2") do |config|
+    config.vm.box = "debian/buster64"
+  
+    config.vm.network "forwarded_port", guest: 80, host: 8080
+    config.vm.network "forwarded_port", guest: 81, host: 8081
+  
+    config.vm.provision "shell", inline: <<-SHELL
+      apt-get update
+      apt-get install -y apache2 php libapache2-mod-php
+  
+      # Настройка статического сайта
+      echo '<html>
+        <head>
+          <title>Success!</title>
+        </head>
+        <body>
+          You Vagrantfile is fine if you can see this message.
+        </body>
+      </html>' > /var/www/html/index.html
+  
+      # Настройка динамического сайта
+      echo '<html>
+        <head>
+          <title>Site is running PHP version <?= phpversion(); ?></title>
+        </head>
+        <body>
+          <?php
+            $limit = rand(1, 1000);
+            for ($i=0; $i<$limit; $i++){
+              echo "<p>Hello, world!</p>";
+            }
+          ?>
+        </body>
+      </html>' > /var/www/html/index.php
+  
+      # Настройка Apache
+      a2enmod php7.3
+      service apache2 restart
+    SHELL
+  end  
